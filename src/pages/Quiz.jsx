@@ -3,21 +3,24 @@ import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
 function Quiz() {
-  const [questions, setQuestions] = useState([]); // Khởi tạo mảng rỗng chuẩn
+  const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const data = await getDocs(collection(db, "questions"));
-        setQuestions(data.docs.map(doc => ({ ...doc.data(), id: doc.id })));
-      } catch (error) {
-        console.error("Lỗi lấy dữ liệu:", error);
-      }
-    };
-    fetchQuestions();
+    // onSnapshot sẽ "lắng nghe" Database. 
+    // Hễ Admin thêm câu mới là nó tự đẩy về đây ngay lập tức.
+    const unsubscribe = onSnapshot(collection(db, "questions"), (snapshot) => {
+      const liveData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setQuestions(liveData);
+    });
+
+    // Cleanup function để ngắt kết nối khi không dùng nữa
+    return () => unsubscribe();
   }, []);
 
   const handleAnswer = (selected) => {
