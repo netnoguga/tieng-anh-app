@@ -53,5 +53,7 @@ function Admin() {
     </div>
   );
 }
-
+// Sau khi addDoc thành công:
+setForm({ question: '', options: '', answer: '' });
+alert("Thêm câu hỏi thành công!");
 export default Admin;
