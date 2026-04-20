@@ -20,5 +20,9 @@ function App() {
     </Router>
   );
 }
-
+<Route path="/admin" element={
+  <ProtectedRoute>
+    <Admin />
+  </ProtectedRoute>
+} />
 export default App;
