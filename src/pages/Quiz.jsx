@@ -15,26 +15,55 @@ function Quiz() {
     return () => unsub();
   }, []);
 
-  const handleAnswer = (opt) => {
-    if (opt === questions[currentIdx]?.answer) setScore(score + 1);
-    if (currentIdx + 1 < questions.length) setCurrentIdx(currentIdx + 1);
-    else setFinished(true);
+  // --- HÀM LÀM LẠI CÂU HỎI ---
+  const handleRestart = () => {
+    setCurrentIdx(0); // Quay về câu 1
+    setScore(0);      // Reset điểm về 0
+    setFinished(false); // Tắt màn hình kết quả để hiện lại câu hỏi
   };
 
-  if (questions.length === 0) return <div style={{textAlign: 'center', padding: '50px'}}>Đang tải câu hỏi...</div>;
+  const handleAnswer = (opt) => {
+    if (opt === questions[currentIdx]?.answer) {
+      setScore(score + 1);
+    }
+    
+    if (currentIdx + 1 < questions.length) {
+      setCurrentIdx(currentIdx + 1);
+    } else {
+      setFinished(true);
+    }
+  };
+
+  if (questions.length === 0) return <div style={{textAlign: 'center', padding: '50px', color: 'white'}}>Đang tải đề thi...</div>;
 
   const currentQ = questions[currentIdx];
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
+    <div style={{ textAlign: 'center', marginTop: '50px', color: 'white' }}>
       {finished ? (
-        <h2>Kết quả: {score}/{questions.length}</h2>
+        <div style={resultBoxStyle}>
+          <h2 style={{ fontSize: '2rem', color: '#00d4ff' }}>🎉 Hoàn thành!</h2>
+          <p style={{ fontSize: '1.5rem' }}>Điểm của bạn: <span style={{color: '#00ff00'}}>{score}</span> / {questions.length}</p>
+          
+          {/* NÚT LÀM LẠI */}
+          <button onClick={handleRestart} style={restartBtnStyle}>
+            🔄 Làm lại bài thi
+          </button>
+        </div>
       ) : (
-        <div>
-          <h3>Câu {currentIdx + 1}: {currentQ?.question}</h3>
-          <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
+        <div style={quizContainerStyle}>
+          <h2 style={{color: '#aaa'}}>Câu {currentIdx + 1} / {questions.length}</h2>
+          <h3 style={{ fontSize: '1.8rem', margin: '30px 0' }}>{currentQ?.question}</h3>
+          
+          <div style={{ display: 'grid', gap: '15px', maxWidth: '600px', margin: 'auto' }}>
             {currentQ?.options?.map((opt, i) => (
-              <button key={i} onClick={() => handleAnswer(opt)} style={btnStyle}>{opt}</button>
+              <button 
+                key={i} 
+                onClick={() => handleAnswer(opt)} 
+                style={answerBtnStyle}
+              >
+                {opt}
+              </button>
             ))}
           </div>
         </div>
@@ -43,5 +72,33 @@ function Quiz() {
   );
 }
 
-const btnStyle = { padding: '10px', cursor: 'pointer', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' };
+// --- CSS NÂNG CẤP CHO ĐẸP ---
+const quizContainerStyle = { padding: '20px', borderRadius: '15px', background: '#1e1e1e', boxShadow: '0 0 20px rgba(0,0,0,0.5)' };
+const resultBoxStyle = { padding: '40px', background: '#222', borderRadius: '20px', border: '2px solid #00d4ff' };
+
+const answerBtnStyle = {
+  padding: '15px',
+  fontSize: '1.1rem',
+  cursor: 'pointer',
+  background: '#007bff',
+  color: 'white',
+  border: 'none',
+  borderRadius: '10px',
+  transition: '0.3s',
+  textAlign: 'left'
+};
+
+const restartBtnStyle = {
+  marginTop: '20px',
+  padding: '12px 30px',
+  fontSize: '1.2rem',
+  background: '#28a745',
+  color: 'white',
+  border: 'none',
+  borderRadius: '50px',
+  cursor: 'pointer',
+  fontWeight: 'bold',
+  boxShadow: '0 4px 15px rgba(40, 167, 69, 0.4)'
+};
+
 export default Quiz;
