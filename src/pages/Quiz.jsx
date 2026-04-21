@@ -4,38 +4,36 @@ import { collection, onSnapshot } from 'firebase/firestore';
 
 function Quiz() {
   const [questions, setQuestions] = useState([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
-  const [showScore, setShowScore] = useState(false);
+  const [finished, setFinished] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "questions"), (snapshot) => {
-      setQuestions(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+    const unsub = onSnapshot(collection(db, "questions"), (snap) => {
+      setQuestions(snap.docs.map(doc => ({ ...doc.data(), id: doc.id })));
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
-  const handleAnswer = (selected) => {
-    if (selected === questions[currentQuestion]?.answer) setScore(score + 1);
-    const next = currentQuestion + 1;
-    if (next < questions.length) setCurrentQuestion(next);
-    else setShowScore(true);
+  const handleAnswer = (opt) => {
+    if (opt === questions[currentIdx]?.answer) setScore(score + 1);
+    if (currentIdx + 1 < questions.length) setCurrentIdx(currentIdx + 1);
+    else setFinished(true);
   };
 
-  if (questions.length === 0) return <h2 style={{textAlign: 'center'}}>Đang tải câu hỏi...</h2>;
+  if (questions.length === 0) return <div style={{textAlign: 'center', padding: '50px'}}>Đang tải câu hỏi...</div>;
+
+  const currentQ = questions[currentIdx];
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      {showScore ? (
-        <div>
-          <h2>Hoàn thành! Điểm của bạn: {score}/{questions.length}</h2>
-          <button onClick={() => window.location.reload()} style={btnStyle}>Thi lại</button>
-        </div>
+      {finished ? (
+        <h2>Kết quả: {score}/{questions.length}</h2>
       ) : (
         <div>
-          <h3>Câu {currentQuestion + 1}: {questions[currentQuestion]?.question}</h3>
+          <h3>Câu {currentIdx + 1}: {currentQ?.question}</h3>
           <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
-            {questions[currentQuestion]?.options?.map((opt, i) => (
+            {currentQ?.options?.map((opt, i) => (
               <button key={i} onClick={() => handleAnswer(opt)} style={btnStyle}>{opt}</button>
             ))}
           </div>
@@ -45,6 +43,5 @@ function Quiz() {
   );
 }
 
-const btnStyle = { padding: '12px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' };
-
+const btnStyle = { padding: '10px', cursor: 'pointer', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px' };
 export default Quiz;
