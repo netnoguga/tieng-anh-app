@@ -1,69 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
 
 function Admin() {
   const [questions, setQuestions] = useState([]);
   const [form, setForm] = useState({ question: '', options: '', answer: '' });
 
-  const fetchQuestions = async () => {
-    const data = await getDocs(collection(db, "questions"));
-    setQuestions(data.docs.map(doc => ({ ...doc.data(), id: doc.id })));
-  };
-
-  useEffect(() => { fetchQuestions(); }, []);
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "questions"), (snapshot) => {
+      setQuestions(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!form.question || !form.options || !form.answer) return alert("Vui lòng nhập đủ thông tin!");
-    
     try {
       await addDoc(collection(db, "questions"), {
         question: form.question,
-        options: form.options.split(',').map(item => item.trim()),
+        options: form.options.split(',').map(opt => opt.trim()),
         answer: form.answer.trim()
       });
-      
-      // SỬA LỖI: Để trong hàm handleAdd
       setForm({ question: '', options: '', answer: '' });
-      alert("Thêm câu hỏi thành công!");
-      fetchQuestions();
-    } catch (err) {
-      alert("Lỗi khi thêm: " + err.message);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Xóa câu này?")) {
-      await deleteDoc(doc(db, "questions", id));
-      fetchQuestions();
-    }
+      alert("Đã thêm câu hỏi!");
+    } catch (err) { alert("Lỗi: " + err.message); }
   };
 
   return (
     <div>
-      <h2 style={{textAlign: 'center'}}>Quản Lý Đề Thi</h2>
-      <form onSubmit={handleAdd} style={formStyle}>
-        <input style={inputStyle} placeholder="Câu hỏi" value={form.question} onChange={e => setForm({...form, question: e.target.value})} />
-        <input style={inputStyle} placeholder="Các đáp án (cách nhau bởi dấu phẩy)" value={form.options} onChange={e => setForm({...form, options: e.target.value})} />
-        <input style={inputStyle} placeholder="Đáp án đúng" value={form.answer} onChange={e => setForm({...form, answer: e.target.value})} />
-        <button type="submit" style={{ ...btnStyle, backgroundColor: '#28a745' }}>Lưu lên Firebase</button>
+      <h2>Quản trị đề thi</h2>
+      <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <input placeholder="Câu hỏi" value={form.question} onChange={e => setForm({...form, question: e.target.value})} required />
+        <input placeholder="Các đáp án (cách nhau bằng dấu phẩy)" value={form.options} onChange={e => setForm({...form, options: e.target.value})} required />
+        <input placeholder="Đáp án đúng (viết y hệt 1 trong các đáp án trên)" value={form.answer} onChange={e => setForm({...form, answer: e.target.value})} required />
+        <button type="submit">Lưu câu hỏi</button>
       </form>
-
       <hr />
-      <h3>Danh sách câu hỏi ({questions.length})</h3>
-      {questions?.map(q => (
-        <div key={q.id} style={{ borderBottom: '1px solid #ddd', padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {questions.map(q => (
+        <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', borderBottom: '1px solid #ccc' }}>
           <span>{q.question}</span>
-          <button onClick={() => handleDelete(q.id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>Xóa</button>
+          <button onClick={() => deleteDoc(doc(db, "questions", q.id))} style={{ color: 'red' }}>Xóa</button>
         </div>
       ))}
     </div>
   );
 }
-
-const formStyle = { display: 'flex', flexDirection: 'column', gap: '10px', padding: '20px', background: '#f9f9f9', borderRadius: '10px' };
-const inputStyle = { padding: '10px', borderRadius: '5px', border: '1px solid #ccc' };
-const btnStyle = { padding: '12px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '8px' };
 
 export default Admin;

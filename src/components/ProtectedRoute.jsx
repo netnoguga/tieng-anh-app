@@ -1,18 +1,22 @@
-// src/components/ProtectedRoute.jsx
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { auth } from '../firebase'; // Đảm bảo bạn đã export auth từ file firebase.js
+import { auth } from '../firebase';
+import { useAuthState } from 'react-firebase-hooks/auth'; // Cần cài: npm install react-firebase-hooks
 
 const ProtectedRoute = ({ children }) => {
-  const user = auth.currentUser;
+  const [user, loading] = useAuthState(auth);
   
-  // Danh sách email được phép truy cập
-  const adminEmails = ['netnobaka@gmail.com', 'nguoiban@gmail.com'];
+  // Thay email của bạn vào đây
+  const adminEmails = ['netnobaka@gmail.com']; 
+
+  if (loading) return <div>Đang kiểm tra quyền truy cập...</div>;
 
   if (!user || !adminEmails.includes(user.email)) {
-    // Nếu không phải admin, đá về trang chủ hoặc trang login
-    alert("Bạn không có quyền truy cập vùng này!");
+    alert("Chỉ Admin mới có quyền vào đây!");
     return <Navigate to="/" />;
   }
 
   return children;
 };
+
+export default ProtectedRoute;

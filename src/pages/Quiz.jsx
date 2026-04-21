@@ -9,17 +9,9 @@ function Quiz() {
   const [showScore, setShowScore] = useState(false);
 
   useEffect(() => {
-    // onSnapshot sẽ "lắng nghe" Database. 
-    // Hễ Admin thêm câu mới là nó tự đẩy về đây ngay lập tức.
     const unsubscribe = onSnapshot(collection(db, "questions"), (snapshot) => {
-      const liveData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setQuestions(liveData);
+      setQuestions(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
     });
-
-    // Cleanup function để ngắt kết nối khi không dùng nữa
     return () => unsubscribe();
   }, []);
 
@@ -36,13 +28,13 @@ function Quiz() {
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
       {showScore ? (
         <div>
-          <h2>Kết quả: {score}/{questions.length}</h2>
-          <button onClick={() => window.location.reload()} style={btnStyle}>Làm lại</button>
+          <h2>Hoàn thành! Điểm của bạn: {score}/{questions.length}</h2>
+          <button onClick={() => window.location.reload()} style={btnStyle}>Thi lại</button>
         </div>
       ) : (
         <div>
           <h3>Câu {currentQuestion + 1}: {questions[currentQuestion]?.question}</h3>
-          <div style={{ display: 'grid', gap: '15px', marginTop: '20px' }}>
+          <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
             {questions[currentQuestion]?.options?.map((opt, i) => (
               <button key={i} onClick={() => handleAnswer(opt)} style={btnStyle}>{opt}</button>
             ))}
@@ -53,6 +45,6 @@ function Quiz() {
   );
 }
 
-const btnStyle = { padding: '15px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px' };
+const btnStyle = { padding: '12px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' };
 
 export default Quiz;
